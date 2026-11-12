@@ -1,0 +1,1210 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مكتبة مسجد سعيد بن المسيب</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#12372A">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Amiri:wght@700&display=swap" rel="stylesheet">
+<!-- Firebase & Chart.js -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root {
+  --bg-app: #f4f7f6;
+  --surface: #ffffff;
+  --primary: #12372A;
+  --primary-light: #436850;
+  --accent: #ADBC9F;
+  --gold: #D4AF37;
+  --gold-light: #FBF6EE;
+  --text-main: #1b2e25;
+  --text-muted: #617A55;
+  --border: #e2ebd8;
+  --danger: #C70039;
+  --success: #2E7D32;
+  --shadow-sm: 0 4px 20px rgba(18, 55, 42, 0.05);
+  --shadow-md: 0 8px 30px rgba(18, 55, 42, 0.08);
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg-app);
+  color: var(--text-main);
+  font-family: 'Cairo', sans-serif;
+  min-height: 100vh;
+}
+
+/* هيدر مدمج وأنيق لا يغطي الشاشة */
+header {
+  background: linear-gradient(135deg, #0A261B 0%, #12372A 100%);
+  color: #ffffff;
+  padding: 12px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 4px 15px rgba(10, 38, 27, 0.15);
+  border-bottom: 3px solid var(--gold);
+}
+header .brand-title {
+  display: flex;
+  flex-direction: column;
+}
+header h1 { font: 700 18px/1.2 'Amiri', serif; margin: 0; color: #F4F6FF; }
+header p { margin: 2px 0 0; opacity: 0.85; font-size: 11px; color: var(--accent); }
+
+.role-switcher {
+  display: flex;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 4px;
+  border-radius: 99px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+.role-btn {
+  background: none;
+  border: 0;
+  color: #fff;
+  padding: 5px 12px;
+  border-radius: 99px;
+  font: 700 11px 'Cairo', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.role-btn.active {
+  background: var(--gold);
+  color: #12372A;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+/* شريط التبويب مرن ومرتب */
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border);
+  padding: 8px 14px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+nav button {
+  background: #f8faf7;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font: 600 12px 'Cairo', sans-serif;
+  color: var(--primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+nav button:hover {
+  background: #edf3ec;
+}
+nav button.on {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  font-weight: 700;
+}
+
+main { max-width: 1100px; margin: 0 auto; padding: 16px 12px 40px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-right: 5px solid var(--gold);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-sm);
+}
+
+.card-hero {
+  background: linear-gradient(135deg, #12372A 0%, #436850 100%);
+  color: #ffffff;
+  border-right: 5px solid var(--gold);
+  border-top: none; border-left: none; border-bottom: none;
+}
+.card-hero h3, .card-hero p { color: #ffffff !important; }
+
+h2 { font: 700 17px 'Amiri', serif; margin: 0 0 12px; color: var(--primary); border-bottom: 2px solid var(--border); padding-bottom: 6px; }
+
+.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 10px; }
+label { display: flex; flex-direction: column; font-size: 12px; color: var(--text-main); font-weight: 700; gap: 4px; flex: 1 1 180px; }
+
+input[type="text"], input[type="number"], input[type="date"], select, textarea {
+  font: 500 13px 'Cairo', sans-serif !important;
+  padding: 8px 10px !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: 8px !important;
+  background-color: #fbfcfb !important;
+  color: var(--text-main) !important;
+  width: 100% !important;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none !important;
+  border-color: var(--gold) !important;
+  background-color: #ffffff !important;
+}
+
+textarea { min-height: 80px; direction: rtl; }
+
+button.b {
+  background: var(--primary);
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font: 700 13px 'Cairo', sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+button.b:hover { background: #0A261B; }
+button.b.s { background: none; color: var(--primary); border: 1.5px solid var(--primary); }
+button.b.d { background: none; color: var(--danger); border: 1.5px solid var(--danger); }
+button.b.z { padding: 5px 10px; font-size: 11px; }
+
+.kp { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.kp div {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  border-right: 4px solid var(--gold);
+}
+.kp b { display: block; font: 700 22px 'Amiri', serif; color: var(--primary); }
+.kp span { font-size: 11px; color: var(--text-muted); font-weight: 600; }
+
+.charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; margin-top: 12px; }
+.chart-box {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+
+.tw { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th, td { padding: 10px 12px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+th { color: var(--primary); font-weight: 700; background: #f0f5f1; }
+tr:hover td { background: #f8faf8; }
+.tg { padding: 3px 8px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.tg.ok { color: var(--success); background: #edf7ed; }
+.tg.bd { color: var(--danger); background: #fdeded; }
+
+#toast {
+  position: fixed;
+  bottom: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--primary);
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  display: none;
+  z-index: 99;
+  border: 1px solid var(--gold);
+}
+
+.status-indicator { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 99px; font-weight: bold; font-size: 12px; }
+.status-open { background: #edf7ed; color: #1e4620; }
+.status-closed { background: #fdeded; color: #5c0011; }
+.light-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.dot-green { background: #2e7d32; }
+.dot-red { background: #c70039; }
+
+.gate-overlay {
+  background: #ffffff;
+  border: 2px solid var(--gold);
+  border-radius: 14px;
+  padding: 24px 16px;
+  text-align: center;
+}
+
+.gentle-alert {
+  background: var(--gold-light);
+  border-right: 4px solid var(--gold);
+  padding: 12px 14px;
+  border-radius: 8px;
+  color: #594100;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
+
+.badge-tag {
+  display: inline-block;
+  background: var(--gold);
+  color: #12372A;
+  padding: 4px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.featured-card {
+  background: #fffcf4;
+  border-right: 4px solid var(--gold);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+
+.reflection-card {
+  background: #f0f5f1;
+  border-right: 4px solid var(--primary);
+  border-radius: 10px;
+  padding: 14px;
+  margin-bottom: 14px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-title">
+    <h1>🕌 مكتبة مسجد سعيد بن المسيب</h1>
+    <p>الإقامة الجامعية محجوبي محمد</p>
+  </div>
+  <div class="role-switcher">
+    <button class="role-btn active" id="btn-student-view" onclick="switchMode('student')">👨‍🎓 بوابة الطالب</button>
+    <button class="role-btn" id="btn-admin-view" onclick="switchMode('admin')">🔒 بوابة المشرفين</button>
+  </div>
+</header>
+
+<nav id="nv"></nav>
+<main id="v"></main>
+<div id="toast"></div>
+
+<script>
+let db = null;
+try {
+  const firebaseConfig = {
+    apiKey: "AIzaSyCK8es0ysFJ5IP9IhsEPT4yWUTD-K1UWiw",
+    authDomain: "project-1011d907-4868-4204-a40.firebaseapp.com",
+    projectId: "project-1011d907-4868-4204-a40",
+    storageBucket: "project-1011d907-4868-4204-a40.appspot.com",
+    messagingSenderId: "sender-id",
+    appId: "app-id"
+  };
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+  db = firebase.firestore();
+} catch (e) {
+  console.warn("Firebase offline mode active.", e);
+}
+
+const AUTH_PASS = "mossala1500";
+const DAYS_LIST = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+const CATS = ['عقيدة', 'فقه وأصوله', 'تفسير وعلوم القرآن', 'حديث وعلومه', 'سيرة وتاريخ', 'فكر وثقافة', 'لغة وأدب', 'علوم ومعارف', 'تربية وتنمية', 'أخرى'];
+
+let currentMode = 'student';
+let currentUser = JSON.parse(localStorage.getItem('mosque_student') || 'null');
+
+let S = JSON.parse(localStorage.getItem('mosque_state') || JSON.stringify({
+  books: [
+    {id: 'b1', t: 'رياض الصالحين', a: 'الإمام النووي', c: 'حديث وعلومه', s: 'الرف الأول'},
+    {id: 'b2', t: 'التفسير الميسر', a: 'نخبة من العلماء', c: 'تفسير وعلوم القرآن', s: 'الرف الثاني'},
+    {id: 'b3', t: 'الرحيق المختوم', a: 'صفي الرحمن المباركفوري', c: 'سيرة وتاريخ', s: 'الرف الثالث'}
+  ],
+  loans: [],
+  students: [],
+  shop: [{id: 'sh1', title: 'حصن المسلم (نسخة جيب)', price: 150, qty: 20}],
+  shopOrders: [],
+  exchangeBooks: [],
+  bookThoughts: [],
+  quizAnswers: [],
+  weeklyWinner: null,
+  featuredBook: {title: 'رياض الصالحين', author: 'الإمام النووي', desc: 'كتاب جامع لأبواب الخير والآداب والأذكار.'},
+  weeklyReflection: {
+    quranVerse: '﴿ وَاصْبِرْ نَفْسَكَ مَعَ الَّذِينَ يَدْعُونَ رَبَّهُم بِالْغَدَاةِ وَالْعَشِيِّ يُرِيدُونَ وَجْهَهُ ﴾ [الكهف: 28]',
+    hadith: '«مَنْ سَلَكَ طَرِيقًا يَلْتَمِسُ فِيهِ عِلْمًا سَهَّلَ اللَّهُ لَهُ بِهِ طَرِيقًا إِلَى الْجَنَّةِ» [رواه مسلم]',
+    explanation: 'توجيه رباني ونبوي كريم بفضل مجالس الذكر والعلم وصحبة أهل الخير والطلب.',
+    fiqhQuestion: 'ما حكم صلاة الجماعة في حق المقيم والمسافر، وما أدلة الوجوب؟'
+  },
+  schedule: {'الأحد': 'عبد الله', 'الإثنين': 'يوسف', 'الثلاثاء': 'أمين', 'الأربعاء': 'محمد', 'الخميس': 'إبراهيم', 'الجمعة': 'عثمان', 'السبت': 'بلال'},
+  status: { isOpen: true },
+  reports: [],
+  maintenance: [],
+  wishes: []
+}));
+
+function saveLocalState() {
+  localStorage.setItem('mosque_state', JSON.stringify(S));
+}
+
+function switchMode(mode) {
+  if (mode === 'admin') {
+    const pass = prompt("أدخل كلمة السر الإدارية للمشرفين:");
+    if (pass !== AUTH_PASS) {
+      alert("كلمة السر خاطئة!");
+      return;
+    }
+    currentMode = 'admin';
+    $('#btn-admin-view').classList.add('active');
+    $('#btn-student-view').classList.remove('active');
+    toast("تم الانتقال إلى بوابة المشرفين");
+  } else {
+    currentMode = 'student';
+    $('#btn-student-view').classList.add('active');
+    $('#btn-admin-view').classList.remove('active');
+    toast("تم الانتقال إلى بوابة الطالب العامة");
+  }
+  go(currentMode === 'student' ? 'st_home' : 'ad_dash');
+}
+
+async function put(c, o) {
+  if (!S[c]) S[c] = [];
+  const idx = S[c].findIndex(x => x.id === o.id);
+  if (idx >= 0) S[c][idx] = o;
+  else S[c].push(o);
+  saveLocalState();
+  go(T);
+  if (db) { try { await db.collection(c).doc(o.id).set(o); } catch (e) {} }
+  return true;
+}
+
+async function rm(c, id) {
+  if (S[c]) S[c] = S[c].filter(x => x.id !== id);
+  saveLocalState();
+  go(T);
+  if (db) { try { await db.collection(c).doc(id).delete(); } catch (e) {} }
+  return true;
+}
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const today = () => new Date().toISOString().slice(0, 10);
+const addD = (d, n) => { const x = new Date(d); x.setDate(x.getDate() + n); return x.toISOString().slice(0, 10); };
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+
+function calcRemainingDays(dueDateStr) {
+  if (!dueDateStr) return { text: 'غير محدد', days: 0, isLate: false };
+  const d1 = new Date(today());
+  const d2 = new Date(dueDateStr);
+  const diffTime = d2 - d1;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) {
+    return { text: `متأخر بـ ${Math.abs(diffDays)} يوم`, days: Math.abs(diffDays), isLate: true };
+  } else if (diffDays === 0) {
+    return { text: 'اليوم هو آخر موعد للإرجاع', days: 0, isLate: false };
+  } else {
+    return { text: `متبقي ${diffDays} يوم`, days: diffDays, isLate: false };
+  }
+}
+
+let tt;
+const toast = m => { const t = $('#toast'); if(!t) return; t.textContent = m; t.style.display = 'block'; clearTimeout(tt); tt = setTimeout(() => t.style.display = 'none', 2500); };
+
+const STUDENT_TABS = [
+  ['st_home', '🏠 الرئيسية'],
+  ['st_reflection', '✨ الإضاءة والمسابقة'],
+  ['st_exchange', '🔄 تبادل الغرف'],
+  ['st_stats', '📊 الإحصائيات'],
+  ['st_search', '🔍 تصفح الكتب'],
+  ['st_shop', '🛒 ركن الشراء'],
+  ['st_profile', '👤 حسابي'],
+  ['st_wish', '💡 اقتراح كتاب'],
+  ['st_report', '🔒 إبلاغ سري']
+];
+
+const ADMIN_TABS = [
+  ['ad_dash', '📊 الإحصائيات العامة'],
+  ['ad_schedule', '📅 جدول المداومات'],
+  ['ad_quiz', '🏆 إدارة المسابقة'],
+  ['ad_books', '📚 إدارة الكتب'],
+  ['ad_loans', '🔄 سجل الإعارات'],
+  ['ad_students', '👥 الطلاب المسجلين'],
+  ['ad_shoporders', '🛍️ طلبات الشراء'],
+  ['ad_exchange', '🔄 متابعة التبادل'],
+  ['ad_shop', '🛒 إدارة البيع'],
+  ['ad_maint', '🛠️ سجل الصيانة'],
+  ['ad_reports', '🔒 البلاغات السرية']
+];
+
+let T = 'st_home';
+const openLoan = b => (S.loans || []).filter(l => !l.r).find(l => l.b === b.id);
+const status = b => openLoan(b) ? 'معار' : 'متاح';
+const bt = id => ((S.books || []).find(x => x.id === id) || {}).t || '(محذوف)';
+
+function renderCharts() {
+  setTimeout(() => {
+    const catCanvas = $('#catChart');
+    if (catCanvas) {
+      const counts = CATS.map(c => (S.books || []).filter(b => b.c === c).length);
+      new Chart(catCanvas, {
+        type: 'doughnut',
+        data: {
+          labels: CATS,
+          datasets: [{
+            data: counts,
+            backgroundColor: ['#12372A', '#D4AF37', '#436850', '#C70039', '#5B6A62', '#3B7A57', '#9B59B6', '#7F8C8D', '#2ECC71', '#F1C40F']
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+
+    const mainCanvas = $('#mainChart');
+    if (mainCanvas) {
+      new Chart(mainCanvas, {
+        type: 'bar',
+        data: {
+          labels: ['إجمالي الكتب', 'معارة حالياً', 'تبادل الغرف', 'كتب للبيع'],
+          datasets: [{
+            label: 'العدد الإجمالي',
+            data: [(S.books || []).length, (S.loans || []).filter(l=>!l.r).length, (S.exchangeBooks||[]).length, (S.shop||[]).length],
+            backgroundColor: ['#12372A', '#D4AF37', '#436850', '#C70039']
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } } }
+      });
+    }
+  }, 100);
+}
+
+function checkStudentAuth() {
+  if (!currentUser) {
+    return `<div class="gate-overlay">
+      <h2 style="color:var(--primary); border:none; font-size:18px; margin-bottom:8px;">🔒 تسجيل الدخول أولاً</h2>
+      <p style="color:var(--text-muted); font-size:12px; margin-bottom:14px;">
+        أدخل معلوماتك الشخصية ورقم الواتساب للاستفادة من الخدمات.
+        <br><strong style="color:var(--danger);">تنبيه: رقم التسجيل يتكون من 8 أرقام.</strong>
+      </p>
+      <div class="row" style="max-width:400px; margin:0 auto; text-align:right;">
+        <label>رقم التسجيل الجامعي (8 أرقام)
+          <input type="text" id="login_reg" placeholder="مثال: 12345678" maxlength="8">
+        </label>
+        <label>الاسم واللقب كاملين
+          <input type="text" id="login_name" placeholder="اسمك الكامل...">
+        </label>
+        <label>رقم الغرفة بالإقامة
+          <input type="text" id="login_rm" placeholder="رقم الغرفة...">
+        </label>
+        <label>رقم الواتساب
+          <input type="text" id="login_phone" placeholder="مثال: 0612345678">
+        </label>
+      </div>
+      <div style="margin-top:14px;">
+        <button class="b" style="background:var(--gold); color:#12372A;" onclick="saveStudentAccount()">إنشاء الحساب والدخول 👤</button>
+      </div>
+    </div>`;
+  }
+  return null;
+}
+
+function vStudentHome() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  const isOpen = S.status && S.status.isOpen !== undefined ? S.status.isOpen : true;
+  const todayName = DAYS_LIST[new Date().getDay()];
+  const todaySupervisor = S.schedule && S.schedule[todayName] ? S.schedule[todayName] : 'غير محدد';
+ 
+  const myLoans = (S.loans || []).filter(l => l.reg === currentUser.reg && !l.r);
+  const overdueLoans = myLoans.filter(l => l.d && l.d < today());
+  const fb = S.featuredBook;
+  const winner = S.weeklyWinner;
+
+  return `
+  ${overdueLoans.length ? `
+  <div class="gentle-alert">
+    🌸 <b>تنبيه لطيف:</b> أخي ${esc(currentUser.name)}، لديك (${overdueLoans.length}) كتاب متأخر عن موعد الإرجاع. نرجو إرجاعه للمكتبة قريباً. 📖✨
+  </div>` : ''}
+
+  ${winner ? `
+  <div class="featured-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+      <h3 style="margin:0; color:#9c7814; font-size:15px;">🏆 الفائز في مسابقة الأسبوع:</h3>
+      <span class="badge-tag">بطل المسابقة</span>
+    </div>
+    <p style="margin:4px 0; font-size:14px; font-weight:bold; color:var(--primary);">🎉 الطالب: ${esc(winner.studentName)} (غرفة ${esc(winner.room)})</p>
+  </div>` : ''}
+
+  ${fb ? `
+  <div class="featured-card">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+      <h3 style="margin:0; color:#856404; font-size:15px;">⭐ كتاب الأسبوع المميز:</h3>
+      <span class="badge-tag">مختار للمطالعة</span>
+    </div>
+    <p style="margin:4px 0; font-size:14px; font-weight:bold; color:var(--primary);">📖 ${esc(fb.title)} <span style="font-weight:normal; font-size:12px; color:var(--text-muted);">(${esc(fb.author)})</span></p>
+    <p style="margin:0; font-size:12px; color:#555;">💡 ${esc(fb.desc)}</p>
+  </div>` : ''}
+
+  <div class="card card-hero">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+      <span class="status-indicator ${isOpen ? 'status-open' : 'status-closed'}">
+        <i class="light-dot ${isOpen ? 'dot-green' : 'dot-red'}"></i>
+        ${isOpen ? 'المكتبة مفتوحة 🟢' : 'المكتبة مغلقة 🔴'}
+      </span>
+      <div style="font-size:13px; font-weight:bold;">
+        المشرف المناوب (${todayName}): <mark style="padding:2px 8px; background:var(--gold); border-radius:4px; color:#12372A;">${esc(todaySupervisor)}</mark>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="background: #edf3ec; border-color: #b2c9b4;">
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+      <div>
+        <h3 style="margin:0; color:var(--primary); font-size:16px;">أهلاً بك: ${esc(currentUser.name)} 🌸</h3>
+        <p style="margin:4px 0 0; font-size:12px; color:var(--text-muted);">رقم التسجيل: <b>${esc(currentUser.reg)}</b> | الغرفة: <b>${esc(currentUser.rm)}</b></p>
+      </div>
+      <button class="b s z" onclick="logoutStudent()">خروج</button>
+    </div>
+  </div>
+
+  <div class="kp">
+    <div><b>${(S.books || []).length}</b><span>كتاب بالمكتبة</span></div>
+    <div><b>${(S.loans || []).filter(l=>!l.r).length}</b><span>معار حالياً</span></div>
+    <div><b>${(S.exchangeBooks||[]).length}</b><span>تبادل الغرف</span></div>
+    <div><b>${(S.shop||[]).length}</b><span>كتب للبيع</span></div>
+  </div>`;
+}
+
+function vStudentReflection() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  const rf = S.weeklyReflection;
+  return `<div class="card">
+    <h2>✨ آية وحديث الأسبوع والمسابقة</h2>
+    ${rf ? `
+      <div class="reflection-card">
+        <p style="margin:0 0 6px; font-size:14px; font-weight:bold; color:var(--primary);">📌 الآية: ${esc(rf.quranVerse)}</p>
+        <p style="margin:0 0 8px; font-size:13px; font-weight:bold; color:var(--text-main);">📌 الحديث: ${esc(rf.hadith)}</p>
+        <p style="margin:0 0 10px; font-size:12px; color:#333;">💡 <b>الشرح:</b> ${esc(rf.explanation)}</p>
+        <div style="background:#fff; padding:10px; border-radius:8px; border:1px solid #b2c9b4;">
+          <p style="margin:0 0 6px; font-weight:bold; color:var(--primary); font-size:13px;">⚖️ سؤال المسابقة الفقهية:</p>
+          <p style="margin:0 0 10px; font-size:12px; color:#444;"><b>${esc(rf.fiqhQuestion || 'لا يوجد سؤال مطروح حالياً.')}</b></p>
+          
+          <label style="margin-bottom:8px;">إجابتك:
+            <textarea id="st_quiz_ans" placeholder="اكتب إجابتك هنا..."></textarea>
+          </label>
+          <button class="b" onclick="submitQuizAnswer()">إرسال الإجابة 📤</button>
+        </div>
+      </div>
+    ` : '<p class="em">لا توجد إضاءة إيمانية مضافة بعد.</p>'}
+  </div>`;
+}
+
+async function submitQuizAnswer() {
+  const answer = $('#st_quiz_ans').value.trim();
+  if (!answer) { alert("يرجى كتابة إجابتك أولاً"); return; }
+
+  await put('quizAnswers', {
+    id: uid(),
+    studentName: currentUser.name,
+    reg: currentUser.reg,
+    room: currentUser.rm,
+    phone: currentUser.phone,
+    answer: answer,
+    date: today()
+  });
+  alert("تم إرسال إجابتك بنجاح!");
+  $('#st_quiz_ans').value = '';
+  go('st_reflection');
+}
+
+async function saveStudentAccount(){
+  const reg = $('#login_reg').value.trim();
+  const name = $('#login_name').value.trim();
+  const rmNum = $('#login_rm').value.trim();
+  const phone = $('#login_phone').value.trim();
+
+  if (!reg || !name || !rmNum || !phone) {
+    alert("❌ يرجى ملء جميع الحقول.");
+    return;
+  }
+
+  if (!/^\d{8}$/.exec(reg)) {
+    alert("❌ يجب أن يتكون رقم التسجيل الجامعي من 8 أرقام فقط.");
+    return;
+  }
+
+  currentUser = { reg, name, rm: rmNum, phone };
+  localStorage.setItem('mosque_student', JSON.stringify(currentUser));
+  await put('students', { id: 'st_' + reg, reg, n: name, rm: rmNum, phone, date: today() });
+  toast("تم إنشاء الحساب بنجاح!");
+  go('st_home');
+}
+
+function logoutStudent(){ localStorage.removeItem('mosque_student'); currentUser = null; go('st_home'); }
+
+function vStudentExchange() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  const items = S.exchangeBooks || [];
+  return `<div class="card">
+    <h2>🔄 تبادل الكتب بين الغرف</h2>
+    
+    <div class="row" style="background:#f8faf8; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px;">
+      <label>عنوان الكتاب<input type="text" id="eb_title" placeholder="اسم الكتاب..."></label>
+      <label>المؤلف<input type="text" id="eb_author" placeholder="المؤلف..."></label>
+      <label>نوع العرض<select id="eb_type"><option>إهداء مجاني</option><option>تبادل مؤقت</option></select></label>
+      <button class="b" onclick="addExchangeBook()">عرض الكتاب 📚</button>
+    </div>
+
+    <h3>الكتب المعروضة:</h3>
+    ${items.length ? `<div class="tw"><table><tr><th>الكتاب</th><th>المؤلف</th><th>النوع</th><th>الطالب</th><th>الغرفة</th><th>تواصل</th></tr>
+    ${items.map(i=>`<tr><td><b>${esc(i.title)}</b></td><td>${esc(i.author)}</td><td><span class="badge-tag">${i.type}</span></td><td>${esc(i.studentName)}</td><td>غرفة ${esc(i.room)}</td><td><a href="https://wa.me/213${esc(i.phone).replace(/^0/, '')}" target="_blank" style="color:var(--success); font-weight:bold; text-decoration:none;">💬 واتساب</a></td></tr>`).join('')}
+    </table></div>` : '<p class="em">لا توجد كتب معروضة حالياً.</p>'}
+  </div>`;
+}
+
+async function addExchangeBook() {
+  const title = $('#eb_title').value.trim();
+  const author = $('#eb_author').value.trim();
+  const type = $('#eb_type').value;
+  if (!title) { alert("أدخل عنوان الكتاب"); return; }
+
+  await put('exchangeBooks', {
+    id: uid(),
+    title,
+    author,
+    type,
+    studentName: currentUser.name,
+    room: currentUser.rm,
+    phone: currentUser.phone,
+    date: today()
+  });
+  alert("تم إدراج الكتاب بنجاح!");
+  go('st_exchange');
+}
+
+function vStudentStats() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  renderCharts();
+  return `<div class="card">
+    <h2>📊 الرسوم البيانية والإحصائيات</h2>
+    <div class="charts-grid">
+      <div class="chart-box">
+        <h3>توزيع الكتب حسب التصنيف</h3>
+        <canvas id="catChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>ملخص الحركة والنشاط</h3>
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+  </div>`;
+}
+
+function vStudentSearch() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  const thoughts = S.bookThoughts || [];
+
+  return `<div class="card">
+    <h2>🔍 تصفح الكتب وأماكن الرفوف</h2>
+    <div class="tw"><table><tr><th>العنوان</th><th>المؤلف</th><th>التصنيف</th><th>مكان الرف</th><th>الحالة</th></tr>
+    ${(S.books || []).map(b=>`<tr><td><b>${esc(b.t)}</b></td><td>${esc(b.a)}</td><td>${esc(b.c)}</td><td><mark>${esc(b.s||'غير محدد')}</mark></td><td><span class="tg ${status(b)==='متاح'?'ok':'bd'}">${status(b)}</span></td></tr>`).join('')}
+    </table></div>
+  </div>
+
+  <div class="card">
+    <h2>✍️ زاوية خواطر القراء</h2>
+    <div class="row">
+      <label>اسم الكتاب<input type="text" id="th_book" placeholder="اسم الكتاب..."></label>
+      <label style="flex:2 1 200px">الخاطرة أو الاقتباس<textarea id="th_text" placeholder="اكتب فائدة أو اقتباس..."></textarea></label>
+      <button class="b" onclick="addBookThought()">نشر الخاطرة 🌟</button>
+    </div>
+
+    <h3 style="margin-top:14px;">الخواطر المنشورة:</h3>
+    ${thoughts.length ? thoughts.map(t=>`
+      <div style="background:#f8faf8; border:1px solid var(--border); border-right:3px solid var(--gold); padding:10px; border-radius:8px; margin-bottom:8px;">
+        <div style="font-size:12px; color:var(--primary); font-weight:bold;">📖 كتاب: ${esc(t.bookTitle)} <span style="font-weight:normal; color:var(--text-muted);">(${esc(t.studentName)})</span></div>
+        <div style="font-size:12px; font-style:italic;">"${esc(t.thought)}"</div>
+      </div>
+    `).join('') : '<p class="em">لا توجد خواطر منشورة حتى الآن.</p>'}
+  </div>`;
+}
+
+async function addBookThought() {
+  const bookTitle = $('#th_book').value.trim();
+  const thought = $('#th_text').value.trim();
+  if (!bookTitle || !thought) { alert("أدخل اسم الكتاب والخاطرة"); return; }
+
+  await put('bookThoughts', {
+    id: uid(),
+    bookTitle,
+    thought,
+    studentName: currentUser.name,
+    room: currentUser.rm,
+    date: today()
+  });
+  alert("تم نشر خاطرتك بنجاح!");
+  go('st_search');
+}
+
+function vStudentShop() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  const items = S.shop || [];
+  return `<div class="card"><h2>ركن شراء الكتب</h2>
+  ${items.length ? `<div class="tw"><table><tr><th>الكتاب</th><th>السعر</th><th>المتبقي</th><th>طلب</th></tr>
+  ${items.map(i=>`<tr><td><b>${esc(i.title)}</b></td><td>${i.price} دج</td><td>${i.qty}</td><td><button class="b z" onclick="orderBook('${i.id}','${esc(i.title)}')">طلب وشراء</button></td></tr>`).join('')}
+  </table></div>` : '<p class="em">لا توجد كتب للبيع حالياً.</p>'}</div>`;
+}
+
+async function orderBook(bId, bTitle) {
+  const bk = S.shop.find(x => x.id === bId);
+  if (bk && +bk.qty > 0) {
+    await put('shopOrders', {
+      id: uid(),
+      bookId: bId,
+      bookTitle: bTitle,
+      studentName: currentUser.name,
+      reg: currentUser.reg,
+      room: currentUser.rm,
+      phone: currentUser.phone,
+      price: bk.price,
+      date: today()
+    });
+    alert("تم تسجيل طلب الشراء بنجاح!");
+    go('st_shop');
+  }
+}
+
+function vStudentProfile() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  const myLoans = (S.loans || []).filter(l => l.reg === currentUser.reg);
+  const totalRead = myLoans.filter(l => l.r).length;
+  
+  let badgeTitle = "قارئ مبادر 🌱";
+  if (totalRead >= 5) badgeTitle = "باحث فقهي 🌟";
+  if (totalRead >= 10) badgeTitle = "نجم القراءة 🏆";
+
+  return `<div class="card">
+    <h2>ملف الطالب والأوسمة</h2>
+    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; background:#f8faf8; padding:12px; border-radius:8px; border:1px solid var(--border); margin-bottom:12px;">
+      <div>
+        <p style="margin:0 0 4px; font-size:13px;"><b>القارئ:</b> ${esc(currentUser.name)}</p>
+        <p style="margin:0; font-size:12px; color:var(--text-muted);">رقم التسجيل: <b>${esc(currentUser.reg)}</b> | الغرفة: <b>${esc(currentUser.rm)}</b></p>
+      </div>
+      <div style="text-align:center;">
+        <span class="badge-tag">${badgeTitle}</span>
+      </div>
+    </div>
+
+    <h3>سجل إعاراتك:</h3>
+    ${myLoans.length ? `<div class="tw"><table><tr><th>الكتاب</th><th>تاريخ الإعارة</th><th>الإرجاع</th><th>الحالة</th></tr>
+    ${myLoans.map(l=>{
+      const rem = calcRemainingDays(l.d);
+      return `<tr><td><b>${bt(l.b)}</b></td><td>${l.o}</td><td>${l.d}</td><td><mark style="background:${l.r?'#edf7ed':(rem.isLate?'#fdeded':'#edf7ed')}; color:${l.r?'#2e7d32':(rem.isLate?'#c70039':'#2e7d32')}; font-weight:bold; padding:2px 6px; border-radius:4px;">${l.r ? 'تم الإرجاع ✓' : rem.text}</mark></td></tr>`;
+    }).join('')}
+    </table></div>` : '<p class="em">لا توجد إعارات مسجلة.</p>'}
+  </div>`;
+}
+
+function vStudentWish() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  return `<div class="card"><h2>اقترح كتاباً جديداً للمكتبة</h2>
+  <div class="row">
+    <label>عنوان الكتاب المطلوب<input type="text" id="sw_t" placeholder="اسم الكتاب..."></label>
+    <button class="b" onclick="addWish()">إرسال المقترح</button>
+  </div></div>`;
+}
+
+async function addWish(){
+  const title = $('#sw_t').value.trim();
+  if (!title) return;
+  await put('wishes', { id: uid(), title, student: currentUser.name, phone: currentUser.phone, date: today() });
+  alert("تم إرسال المقترح بنجاح!");
+  go('st_home');
+}
+
+function vStudentReport() {
+  const gate = checkStudentAuth();
+  if (gate) return gate;
+
+  return `<div class="card" style="border:1.5px dashed var(--danger);">
+    <h2 style="color:var(--danger);">🔒 إبلاغ سري مجهول</h2>
+    <div class="row">
+      <label>نوع الملاحظة<select id="sr_t"><option>تعامل غير لائق</option><option>تقصير في أوقات الفتح</option><option>تحيز في المعاملة</option></select></label>
+      <label style="flex:2 1 180px">التفاصيل<textarea id="sr_m" placeholder="اكتب التفاصيل بسرية..."></textarea></label>
+    </div>
+    <div style="margin-top:8px;"><button class="b" style="background:var(--danger);" onclick="sendAnonReport()">إرسال البلاغ بسرية 🛡️</button></div>
+  </div>`;
+}
+
+async function sendAnonReport(){
+  const msg = $('#sr_m').value.trim();
+  if (!msg) return;
+  await put('reports', { id: uid(), type: $('#sr_t').value, message: msg, date: today() });
+  alert("تم إرسال بلاغك بنجاح.");
+  $('#sr_m').value = ''; go('st_home');
+}
+
+/* --- واجهات المشرفين --- */
+
+function vAdminDash() {
+  renderCharts();
+  return `<div class="card">
+    <h2>📊 لوحة الإحصائيات العامة للمشرفين</h2>
+    <div class="kp">
+      <div><b>${(S.books || []).length}</b><span>إجمالي الكتب</span></div>
+      <div><b>${(S.loans || []).filter(l=>!l.r).length}</b><span>معار حالياً</span></div>
+      <div><b>${(S.students||[]).length}</b><span>الطلاب</span></div>
+      <div><b>${(S.quizAnswers||[]).length}</b><span>إجابات المسابقة</span></div>
+    </div>
+    <div class="charts-grid">
+      <div class="chart-box">
+        <h3>توزيع التصنيفات</h3>
+        <canvas id="catChart"></canvas>
+      </div>
+      <div class="chart-box">
+        <h3>مؤشرات الحركة</h3>
+        <canvas id="mainChart"></canvas>
+      </div>
+    </div>
+  </div>`;
+}
+
+function vAdminSchedule() {
+  const sch = S.schedule || {};
+  const st = S.status || { isOpen: true };
+  const fb = S.featuredBook || {};
+  const rf = S.weeklyReflection || {};
+  return `<div class="card">
+    <h2>✨ إدارة الإضاءة والمسابقة الأسبوعية</h2>
+    <div class="row">
+      <label style="flex:2 1 200px">الآية الكريمة<textarea id="rf_q">${esc(rf.quranVerse||'')}</textarea></label>
+      <label style="flex:2 1 200px">الحديث الشريف<textarea id="rf_h">${esc(rf.hadith||'')}</textarea></label>
+      <label style="flex:2 1 200px">الشرح والتدبر<textarea id="rf_e">${esc(rf.explanation||'')}</textarea></label>
+      <label style="flex:2 1 200px">سؤال المسابقة الفقهية<textarea id="rf_f">${esc(rf.fiqhQuestion||'')}</textarea></label>
+      <button class="b" onclick="saveWeeklyReflection()">حفظ ونشر ✨</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>⭐ كتاب الأسبوع المميز</h2>
+    <div class="row">
+      <label>عنوان الكتاب<input type="text" id="fb_title" value="${esc(fb.title||'')}"></label>
+      <label>اسم المؤلف<input type="text" id="fb_author" value="${esc(fb.author||'')}"></label>
+      <label style="flex:2 1 200px">نبذة قصيرة<input type="text" id="fb_desc" value="${esc(fb.desc||'')}"></label>
+      <button class="b" onclick="saveFeaturedBook()">حفظ الكتاب ⭐</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>🔴/🟢 حالة الفتح المباشرة</h2>
+    <div class="row">
+      <label>حالة المسجد
+        <select id="as_open">
+          <option value="true" ${st.isOpen ? 'selected' : ''}>مفتوحة 🟢</option>
+          <option value="false" ${!st.isOpen ? 'selected' : ''}>مغلقة 🔴</option>
+        </select>
+      </label>
+      <button class="b" onclick="saveAdminStatus()">تحديث الحالة</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>✏️ تعديل جدول المشرفين والمداومات</h2>
+    <div class="row">
+      ${DAYS_LIST.map(d => `
+        <label>${d}
+          <input type="text" id="sch_${d}" value="${esc(sch[d] || '')}">
+        </label>
+      `).join('')}
+    </div>
+    <div style="margin-top:10px;">
+      <button class="b" onclick="saveAdminSchedule()">حفظ الجدول 💾</button>
+    </div>
+  </div>`;
+}
+
+function vAdminQuiz() {
+  const answers = S.quizAnswers || [];
+  const winner = S.weeklyWinner;
+  return `<div class="card">
+    <h2>🏆 إجابات المسابقة الأسبوعية وتتويج الفائز</h2>
+    
+    ${winner ? `
+      <div style="background:#fff9e6; border:1px solid var(--gold); padding:10px; border-radius:8px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+        <div><b>الفائز الحالي:</b> ${esc(winner.studentName)} (غرفة ${esc(winner.room)})</div>
+        <button class="b d z" onclick="removeWinner()">إلغاء</button>
+      </div>` : ''}
+
+    ${answers.length ? `<div class="tw"><table><tr><th>التاريخ</th><th>الطالب</th><th>الغرفة</th><th>الإجابة</th><th>التتويج</th></tr>
+    ${answers.map(a=>`<tr><td>${a.date}</td><td><b>${esc(a.studentName)}</b></td><td>غرفة ${esc(a.room)}</td><td style="white-space:normal; max-width:200px;">${esc(a.answer)}</td><td><button class="b z" style="background:var(--gold); color:#12372A;" onclick="setWeeklyWinner('${esc(a.studentName)}','${esc(a.room)}','${esc(a.answer)}')">تتويج 🏆</button> <button class="b d z" onclick="rm('quizAnswers','${a.id}')">حذف</button></td></tr>`).join('')}
+    </table></div>` : '<p class="em">لا توجد إجابات مرسلة حتى الآن.</p>'}
+  </div>`;
+}
+
+async function setWeeklyWinner(studentName, room, answer) {
+  S.weeklyWinner = { id: 'current', studentName, room, answer, date: today() };
+  saveLocalState();
+  if (db) { try { await db.collection('weeklyWinner').doc('current').set(S.weeklyWinner); } catch(e){} }
+  toast("تم تتويج الفائز بنجاح!");
+  go('ad_quiz');
+}
+
+async function removeWinner() {
+  S.weeklyWinner = null;
+  saveLocalState();
+  if (db) { try { await db.collection('weeklyWinner').doc('current').delete(); } catch(e){} }
+  toast("تمت إزالة الفائز");
+  go('ad_quiz');
+}
+
+async function saveWeeklyReflection() {
+  const quranVerse = $('#rf_q').value.trim();
+  const hadith = $('#rf_h').value.trim();
+  const explanation = $('#rf_e').value.trim();
+  const fiqhQuestion = $('#rf_f').value.trim();
+  S.weeklyReflection = { id: 'current', quranVerse, hadith, explanation, fiqhQuestion };
+  saveLocalState();
+  if (db) { try { await db.collection('weeklyReflection').doc('current').set(S.weeklyReflection); } catch(e){} }
+  toast("تم نشر الإضاءة والمسابقة!");
+  go('ad_schedule');
+}
+
+async function saveFeaturedBook() {
+  const title = $('#fb_title').value.trim();
+  const author = $('#fb_author').value.trim();
+  const desc = $('#fb_desc').value.trim();
+  S.featuredBook = { id: 'current', title, author, desc };
+  saveLocalState();
+  if (db) { try { await db.collection('featuredBook').doc('current').set(S.featuredBook); } catch(e){} }
+  toast("تم تحديث كتاب الأسبوع!");
+  go('ad_schedule');
+}
+
+async function saveAdminSchedule(){
+  let newSch = {};
+  DAYS_LIST.forEach(d => {
+    newSch[d] = $('#sch_' + d).value.trim();
+  });
+  S.schedule = newSch;
+  saveLocalState();
+  if (db) { try { await db.collection('schedule').doc('weekly').set(newSch); } catch(e){} }
+  toast("تم حفظ جدول المداومات!");
+  go('ad_schedule');
+}
+
+async function saveAdminStatus(){
+  S.status = { id: 'main', isOpen: $('#as_open').value === 'true' };
+  saveLocalState();
+  if (db) { try { await db.collection('status').doc('main').set(S.status); } catch(e){} }
+  toast("تم تحديث حالة الفتح!");
+  go('ad_schedule');
+}
+
+function vAdminBooks() {
+  return `<div class="card"><h2>إضافة كتاب جديد</h2><div class="row">
+  <label>العنوان<input type="text" id="ab_t" placeholder="عنوان الكتاب..."></label>
+  <label>المؤلف<input type="text" id="ab_a" placeholder="المؤلف..."></label>
+  <label>التصنيف<select id="ab_c">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></label>
+  <label>الرف (المكان)<input type="text" id="ab_s" placeholder="مثال: الرف 2"></label>
+  <button class="b" onclick="addAdminBook()">إضافة الكتاب</button>
+  </div></div>
+  <div class="card"><h2>فهرس الكتب المسجلة</h2>
+  <div class="tw"><table><tr><th>العنوان</th><th>المؤلف</th><th>التصنيف</th><th>الرف</th><th>إجراء</th></tr>
+  ${(S.books || []).map(b=>`<tr><td><b>${esc(b.t)}</b></td><td>${esc(b.a)}</td><td>${esc(b.c)}</td><td>${esc(b.s)}</td><td><button class="b d z" onclick="rm('books','${b.id}')">حذف</button></td></tr>`).join('')}
+  </table></div></div>`;
+}
+
+async function addAdminBook(){
+  const t = $('#ab_t').value.trim();
+  if (!t) { alert("يرجى كتابة عنوان الكتاب"); return; }
+  await put('books', { id: uid(), t, a: $('#ab_a').value.trim(), c: $('#ab_c').value, s: $('#ab_s').value.trim() });
+  toast("تمت إضافة الكتاب!"); go('ad_books');
+}
+
+function vAdminLoans() {
+  const av = (S.books || []).filter(b => status(b) === 'متاح'), op = (S.loans || []).filter(l => !l.r);
+  return `<div class="card"><h2>تسجيل إعارة جديدة (10 أيام)</h2><div class="row">
+  <label style="flex:2 1 180px">اختر الكتاب المتاح<select id="al_b">${av.map(b=>`<option value="${b.id}">${esc(b.t)}</option>`).join('')}</select></label>
+  <label>رقم تسجيل الطالب<input type="text" id="al_reg" placeholder="رقم التسجيل..."></label>
+  <label>اسم الطالب المستعير<input type="text" id="al_n" placeholder="الاسم..."></label>
+  <label>رقم الغرفة<input type="text" id="al_r" placeholder="الغرفة..."></label>
+  <label>رقم الواتساب<input type="text" id="al_phone" placeholder="الهاتف..."></label>
+  <label>تاريخ الإرجاع<input type="date" id="al_due" value="${addD(today(), 10)}"></label>
+  <button class="b" onclick="addAdminLoan()">تسجيل الإعارة</button>
+  </div></div>
+  <div class="card"><h2>قائمة الكتب المعارة حالياً</h2>
+  ${op.length ? `<div class="tw"><table><tr><th>الكتاب</th><th>المستعير</th><th>رقم التسجيل</th><th>الغرفة</th><th>الواتساب</th><th>الإرجاع</th><th>العد التنازلي</th><th>إجراء</th></tr>
+  ${op.map(l=>{
+    const rem = calcRemainingDays(l.d);
+    return `<tr><td><b>${bt(l.b)}</b></td><td>${esc(l.n)}</td><td>${esc(l.reg)}</td><td>${esc(l.rm)}</td><td>${esc(l.phone || 'غير متوفر')}</td><td>${l.d || 'غير محدد'}</td><td><mark style="background:${rem.isLate?'#fdeded':'#edf7ed'}; color:${rem.isLate?'#c70039':'#2e7d32'}; font-weight:bold; padding:2px 6px; border-radius:4px;">${rem.text}</mark></td><td><button class="b z" onclick="retLoan('${l.id}')">تسجيل الإرجاع</button></td></tr>`;
+  }).join('')}
+  </table></div>` : '<p class="em">لا توجد إعارات مسجلة حالياً.</p>'}
+  </div>`;
+}
+
+async function addAdminLoan(){
+  const b = $('#al_b').value, n = $('#al_n').value.trim(), reg = $('#al_reg').value.trim(), rmNum = $('#al_r').value.trim(), phone = $('#al_phone').value.trim(), dueDate = $('#al_due').value;
+  if (!b || !n || !reg || !dueDate) { alert("أدخل البيانات المطلوبة مع تاريخ الإرجاع"); return; }
+  await put('loans', { id: uid(), b, n, reg, rm: rmNum, phone, o: today(), d: dueDate, r: null });
+  toast("تم تسجيل الإعارة بنجاح!"); go('ad_loans');
+}
+
+async function retLoan(id){
+  const l = (S.loans || []).find(x => x.id === id);
+  if (l) {
+    await put('loans', { ...l, r: today() });
+    toast("تم تسجيل الإرجاع!");
+  }
+  go('ad_loans');
+}
+
+function vAdminStudents() {
+  const students = S.students || [];
+  return `<div class="card">
+    <h2>👥 قائمة الطلاب المسجلين</h2>
+    ${students.length ? `<div class="tw"><table><tr><th>رقم التسجيل</th><th>الاسم</th><th>الغرفة</th><th>الواتساب</th><th>تاريخ التسجيل</th><th>إجراء</th></tr>
+    ${students.map(st=>`<tr><td><b>${esc(st.reg)}</b></td><td>${esc(st.n)}</td><td>غرفة ${esc(st.rm)}</td><td><a href="https://wa.me/213${esc(st.phone).replace(/^0/, '')}" target="_blank" style="color:var(--success); font-weight:bold; text-decoration:none;">💬 ${esc(st.phone)}</a></td><td>${st.date || 'اليوم'}</td><td><button class="b z" onclick="quickLoanFromStudent('${esc(st.reg)}','${esc(st.n)}','${esc(st.rm)}','${esc(st.phone)}')">تعبئة الإعارة ⚡</button> <button class="b d z" onclick="rm('students','${st.id}')">حذف</button></td></tr>`).join('')}
+    </table></div>` : '<p class="em">لا توجد سجلات طلاب مسجلين.</p>'}
+  </div>`;
+}
+
+function quickLoanFromStudent(reg, name, room, phone) {
+  go('ad_loans');
+  setTimeout(() => {
+    if ($('#al_reg')) $('#al_reg').value = reg;
+    if ($('#al_n')) $('#al_n').value = name;
+    if ($('#al_r')) $('#al_r').value = room;
+    if ($('#al_phone')) $('#al_phone').value = phone;
+    toast("تمت تعبئة بيانات الطالب!");
+  }, 200);
+}
+
+function vAdminShopOrders() {
+  const orders = S.shopOrders || [];
+  return `<div class="card">
+    <h2>🛍️ طلبات الشراء الواردة</h2>
+    ${orders.length ? `<div class="tw"><table><tr><th>التاريخ</th><th>الكتاب</th><th>الطالب</th><th>رقم التسجيل</th><th>الغرفة</th><th>واتساب</th><th>السعر</th><th>إجراء</th></tr>
+    ${orders.map(o=>`<tr><td>${o.date}</td><td><b>${esc(o.bookTitle)}</b></td><td>${esc(o.studentName)}</td><td>${esc(o.reg)}</td><td>غرفة ${esc(o.room)}</td><td><a href="https://wa.me/213${esc(o.phone).replace(/^0/, '')}" target="_blank" style="color:var(--success); font-weight:bold; text-decoration:none;">💬 ${esc(o.phone)}</a></td><td>${o.price} دج</td><td><button class="b d z" onclick="rm('shopOrders','${o.id}')">مسح</button></td></tr>`).join('')}
+    </table></div>` : '<p class="em">لا توجد طلبات شراء حالياً.</p>'}
+  </div>`;
+}
+
+function vAdminExchange() {
+  const items = S.exchangeBooks || [];
+  return `<div class="card">
+    <h2>🔄 متابعة تبادل الكتب بين الغرف</h2>
+    ${items.length ? `<div class="tw"><table><tr><th>الكتاب</th><th>المؤلف</th><th>النوع</th><th>الطالب</th><th>الغرفة</th><th>واتساب</th><th>إجراء</th></tr>
+    ${items.map(i=>`<tr><td><b>${esc(i.title)}</b></td><td>${esc(i.author)}</td><td>${i.type}</td><td>${esc(i.studentName)}</td><td>غرفة ${esc(i.room)}</td><td>${esc(i.phone)}</td><td><button class="b d z" onclick="rm('exchangeBooks','${i.id}')">حذف</button></td></tr>`).join('')}
+    </table></div>` : '<p class="em">لا توجد كتب معروضة للتبادل.</p>'}
+  </div>`;
+}
+
+function vAdminShop() {
+  const items = S.shop || [];
+  return `<div class="card"><h2>إدارة ركن البيع</h2><div class="row">
+  <label>عنوان الكتاب<input type="text" id="ash_t" placeholder="اسم الكتاب..."></label>
+  <label>السعر (دج)<input type="number" id="ash_p" placeholder="مثال: 300"></label>
+  <label>الكمية<input type="number" id="ash_q" value="10"></label>
+  <button class="b" onclick="addAdminShop()">إضافة للبيع</button>
+  </div></div>
+  <div class="card"><h2>الكتب المعروضة للبيع</h2>
+  ${items.length ? `<div class="tw"><table><tr><th>العنوان</th><th>السعر</th><th>الكمية</th><th>إجراء</th></tr>
+  ${items.map(i=>`<tr><td><b>${esc(i.title)}</b></td><td>${i.price} دج</td><td>${i.qty}</td><td><button class="b d z" onclick="rm('shop','${i.id}')">حذف</button></td></tr>`).join('')}
+  </table></div>` : '<p class="em">لا توجد كتب للبيع.</p>'}
+  </div>`;
+}
+
+async function addAdminShop(){
+  const t = $('#ash_t').value.trim(), p = $('#ash_p').value;
+  if (!t || !p) { alert("اكتب اسم الكتاب والسعر"); return; }
+  await put('shop', { id: uid(), title: t, price: p, qty: +$('#ash_q').value || 1 });
+  toast("تمت إضافة الكتاب للبيع!"); go('ad_shop');
+}
+
+function vAdminMaint() {
+  const list = S.maintenance || [];
+  return `<div class="card"><h2>سجل صيانة الكتب والترميم</h2><div class="row">
+  <label>اختر الكتاب المتضرر<select id="am_b">${(S.books || []).map(b=>`<option value="${b.id}">${esc(b.t)}</option>`).join('')}</select></label>
+  <label>نوع الصيانة<select id="am_t"><option>ترميم غلاف وتمزق</option><option>تجليد كامل</option><option>نقص صفحات</option></select></label>
+  <label style="flex:2 1 180px">ملاحظات<input type="text" id="am_n" placeholder="مثال: تمزق الصفحات الأخيرة..."></label>
+  <button class="b" onclick="addAdminMaint()">تسجيل صيانة</button>
+  </div></div>
+  <div class="card"><h2>الكتب قيد الصيانة</h2>
+  ${list.length ? `<div class="tw"><table><tr><th>التاريخ</th><th>الكتاب</th><th>نوع الصيانة</th><th>الملاحظات</th><th>إجراء</th></tr>
+  ${list.map(m=>`<tr><td>${m.date}</td><td><b>${bt(m.b)}</b></td><td>${esc(m.type)}</td><td>${esc(m.notes)}</td><td><button class="b d z" onclick="rm('maintenance','${m.id}')">حذف</button></td></tr>`).join('')}
+  </table></div>` : '<p class="em">لا توجد كتب قيد الصيانة حالياً.</p>'}
+  </div>`;
+}
+
+async function addAdminMaint(){
+  const b = $('#am_b').value, t = $('#am_t').value, n = $('#am_n').value.trim();
+  if (!b) return;
+  await put('maintenance', { id: uid(), b, type: t, notes: n, date: today() });
+  toast("تم تسجيل الصيانة!"); go('ad_maint');
+}
+
+function vAdminReports() {
+  const reps = S.reports || [];
+  return `<div class="card"><h2>البلاغات السرية المرفوعة من الطلاب</h2>
+  ${reps.length ? `<div class="tw"><table><tr><th>التاريخ</th><th>التصنيف</th><th>التفاصيل المرفوعة</th><th>إجراء</th></tr>
+  ${reps.map(r=>`<tr><td>${r.date}</td><td><b>${esc(r.type)}</b></td><td>${esc(r.message)}</td><td><button class="b z" onclick="rm('reports','${r.id}')">مسح</button></td></tr>`).join('')}
+  </table></div>` : '<p class="em">لا توجد بلاغات مسجلة.</p>'}
+  </div>`;
+}
+
+const VIEWS = {
+  st_home: vStudentHome, st_reflection: vStudentReflection, st_exchange: vStudentExchange, st_stats: vStudentStats, st_search: vStudentSearch, st_shop: vStudentShop, st_profile: vStudentProfile, st_wish: vStudentWish, st_report: vStudentReport,
+  ad_dash: vAdminDash, ad_schedule: vAdminSchedule, ad_quiz: vAdminQuiz, ad_books: vAdminBooks, ad_loans: vAdminLoans, ad_students: vAdminStudents, ad_shoporders: vAdminShopOrders, ad_exchange: vAdminExchange, ad_shop: vAdminShop, ad_maint: vAdminMaint, ad_reports: vAdminReports
+};
+
+function renderView(t) {
+  T = t;
+  const tabsList = currentMode === 'student' ? STUDENT_TABS : ADMIN_TABS;
+  const nv = $('#nv');
+  const viewEl = $('#v');
+  if (nv) nv.innerHTML = tabsList.map(x => `<button class="${x[0]===t?'on':''}" onclick="go('${x[0]}')">${x[1]}</button>`).join('');
+  if (viewEl) viewEl.innerHTML = VIEWS[t] ? VIEWS[t]() : '';
+}
+
+function go(t) {
+  renderView(t);
+}
+
+function init(){
+  go('st_home');
+  if (db) {
+    ['books','shop','loans','students','reports','schedule','status','wishes','maintenance','shopOrders','exchangeBooks','bookThoughts','quizAnswers','weeklyWinner','featuredBook','weeklyReflection'].forEach(col => {
+      try {
+        db.collection(col).onSnapshot(snapshot => {
+          let ds = snapshot.docs.map(doc => ({...doc.data(), id: doc.id}));
+          if (col === 'status') { const m = ds.find(d => d.id === 'main'); if(m) S.status = m; }
+          else if (col === 'schedule') { const schDoc = ds.find(d => d.id === 'weekly'); if(schDoc) S.schedule = schDoc; }
+          else if (col === 'featuredBook') { const fbDoc = ds.find(d => d.id === 'current'); if(fbDoc) S.featuredBook = fbDoc; }
+          else if (col === 'weeklyReflection') { const rfDoc = ds.find(d => d.id === 'current'); if(rfDoc) S.weeklyReflection = rfDoc; }
+          else if (col === 'weeklyWinner') { const wDoc = ds.find(d => d.id === 'current'); if(wDoc) S.weeklyWinner = wDoc; else S.weeklyWinner = null; }
+          else if (ds.length > 0) { S[col] = ds; }
+          saveLocalState();
+          if (!document.activeElement || !/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) go(T);
+        });
+      } catch (e) {}
+    });
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
